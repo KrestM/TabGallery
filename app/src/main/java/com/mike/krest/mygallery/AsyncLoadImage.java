@@ -43,7 +43,9 @@ public class AsyncLoadImage extends AsyncTask<Integer, Void, Bitmap> {
     @Override
     protected Bitmap doInBackground(Integer... params) {
         mResID = params[0];
-        return decodeImageForGridView(mResID, WIDTH, HEIGHT, mResources);
+        final Bitmap bitmap = decodeImageForGridView(mResID, WIDTH, HEIGHT, mResources);
+        MainActivity.addToCacheMemory(String.valueOf(mResID), bitmap);
+        return bitmap;
     }
 
     private static Bitmap decodeImageForGridView(int imageID, int reqWidth, int reqHeight, Resources resources) {

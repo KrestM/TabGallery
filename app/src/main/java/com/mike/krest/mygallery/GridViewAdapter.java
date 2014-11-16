@@ -63,16 +63,24 @@ public class GridViewAdapter extends BaseAdapter {
             imageView.setPadding(PADDING, PADDING, PADDING, PADDING);
         }
 
-        loadBitmap(imageView, mResources, mThumbIDs.get(position));
+        loadBitmap(imageView, mThumbIDs.get(position));
         return imageView;
     }
 
-    private void loadBitmap(ImageView imageView, Resources mResources, Integer resID) {
-        if (cancelPotentialWork(imageView, resID)) {
-            final AsyncLoadImage task = new AsyncLoadImage(imageView, mResources, WIDTH, HEIGHT);
-            final AsyncDrawable asyncDrawable = new AsyncDrawable(mResources, mPlaceHolderBitmap, task);
-            imageView.setImageDrawable(asyncDrawable);
-            task.execute(resID);
+    private void loadBitmap(ImageView imageView, Integer resID) {
+        final String imageKey = String.valueOf(resID);
+
+        final Bitmap cacheBitmap = MainActivity.getBitmapFromMemCache(imageKey);
+
+        if (cacheBitmap != null) {
+            imageView.setImageBitmap(cacheBitmap);
+        } else {
+            if (cancelPotentialWork(imageView, resID)) {
+                final AsyncLoadImage task = new AsyncLoadImage(imageView, mResources, WIDTH, HEIGHT);
+                final AsyncDrawable asyncDrawable = new AsyncDrawable(mResources, mPlaceHolderBitmap, task);
+                imageView.setImageDrawable(asyncDrawable);
+                task.execute(resID);
+            }
         }
     }
 
@@ -102,7 +110,7 @@ public class GridViewAdapter extends BaseAdapter {
 
     private int getSize() {
         if (mResources.getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
-            return mResources.getDisplayMetrics().widthPixels/2;
+            return mResources.getDisplayMetrics().widthPixels/3;
         else
             return mResources.getDisplayMetrics().widthPixels/4;
     }
