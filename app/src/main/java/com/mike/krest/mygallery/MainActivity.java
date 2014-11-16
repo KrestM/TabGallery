@@ -1,6 +1,8 @@
 package com.mike.krest.mygallery;
 
 import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -43,13 +45,18 @@ public class MainActivity extends Activity {
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 6;
 
-        mMemoryCache = new LruCache<String, Bitmap>(cacheSize){
-            @Override
-            protected int sizeOf(String key, Bitmap value) {
-                return value.getByteCount() / 1024;
-            }
-        };
+        RetainFragment retainFragment = RetainFragment.findOrCreateRetainFragment(getFragmentManager());
+        mMemoryCache = retainFragment.mRetainedCache;
 
+        if (mMemoryCache == null) {
+            mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+                @Override
+                protected int sizeOf(String key, Bitmap value) {
+                    return value.getByteCount() / 1024;
+                }
+            };
+            retainFragment.mRetainedCache = mMemoryCache;
+        }
         gridView.setAdapter(new GridViewAdapter(this, mImageArray));
 
     }
@@ -85,5 +92,28 @@ public class MainActivity extends Activity {
 
     public static Bitmap getBitmapFromMemCache(String key) {
         return mMemoryCache.get(key);
+    }
+
+    public static class RetainFragment extends Fragment {
+        private static final String TAG = "RetainFragment";
+        public LruCache<String, Bitmap> mRetainedCache;
+
+        public RetainFragment() {}
+
+        public static RetainFragment findOrCreateRetainFragment(FragmentManager fm) {
+            RetainFragment fragment = (RetainFragment) fm.findFragmentByTag(TAG);
+            if (fragment == null) {
+                fragment = new RetainFragment();
+                fm.beginTransaction().add(fragment, TAG).commit();
+            }
+            return fragment;
+        }
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setRetainInstance(true);
+        }
+
     }
 }
