@@ -6,6 +6,8 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
+import android.support.v7.widget.CardView;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -54,17 +56,31 @@ public class GridViewAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        ImageView imageView = (ImageView) convertView;
+        ViewHolder viewHolder;
 
-        if (imageView == null) {
-            imageView = new ImageView(mContext);
+        CardView cardView = (CardView) convertView;
+
+        if (cardView == null) {
+            LayoutInflater layoutInflater = LayoutInflater.from(mContext);
+            cardView = (CardView) layoutInflater.inflate(R.layout.item, parent, false);
+            viewHolder = new ViewHolder();
+            ImageView imageView = new ImageView(mContext);
+
             imageView.setLayoutParams(new GridView.LayoutParams(WIDTH, HEIGHT));
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             imageView.setPadding(PADDING, PADDING, PADDING, PADDING);
+
+            cardView.addView(imageView);
+
+            viewHolder.imageView = imageView;
+
+            cardView.setTag(viewHolder);
+        } else {
+            viewHolder = (ViewHolder) cardView.getTag();
         }
 
-        loadBitmap(imageView, mThumbIDs.get(position));
-        return imageView;
+        loadBitmap(viewHolder.imageView, mThumbIDs.get(position));
+        return cardView;
     }
 
     private void loadBitmap(ImageView imageView, Integer resID) {
@@ -113,5 +129,9 @@ public class GridViewAdapter extends BaseAdapter {
             return mResources.getDisplayMetrics().widthPixels/3;
         else
             return mResources.getDisplayMetrics().widthPixels/4;
+    }
+
+    private static class ViewHolder {
+        ImageView imageView;
     }
 }

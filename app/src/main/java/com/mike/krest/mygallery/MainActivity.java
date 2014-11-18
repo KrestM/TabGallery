@@ -1,23 +1,25 @@
 package com.mike.krest.mygallery;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.LruCache;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.GridView;
+import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends ActionBarActivity {
 
     private ArrayList<Integer> mImageArray = new ArrayList<Integer>(
             Arrays.asList(R.drawable.image1, R.drawable.image2, R.drawable.image3,
@@ -29,6 +31,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
         GridView gridView = new GridView(this);
 
@@ -40,7 +43,13 @@ public class MainActivity extends Activity {
             gridView.setColumnWidth(getResources().getDisplayMetrics().widthPixels / 3);
         else
             gridView.setColumnWidth(getResources().getDisplayMetrics().widthPixels / 4);
-        setContentView(gridView);
+
+        LinearLayout layout = (LinearLayout) findViewById(R.id.linearLayout);
+        layout.addView(gridView);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        if (toolbar != null)
+            setSupportActionBar(toolbar);
 
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 6;
