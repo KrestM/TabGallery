@@ -2,4 +2,5 @@
 <resources>
     <color name="my_awesome_color_primary">#6EE0EA</color>
     <color name="my_awesome_color_primary_dark">#53B1BA</color>
+    <color name="layout_color">#DBF7F9</color>
 </resources>
