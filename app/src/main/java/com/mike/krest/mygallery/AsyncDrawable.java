@@ -9,6 +9,10 @@ import java.lang.ref.WeakReference;
 /**
  * Created by Mikhail Krestiyaninov on 16.11.14.
  */
+
+/**
+ * Class for helping with async process of loading images
+ */
 public class AsyncDrawable extends BitmapDrawable {
     private final WeakReference<AsyncLoadImage> asyncLoadImageReference;
 

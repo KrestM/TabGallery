@@ -19,18 +19,22 @@ import java.util.List;
 /**
  * Created by Mikhail Krestiyaninov on 12.11.14.
  */
+
+/**
+ * Adapter responding for display GridView with CardViews which hold thumbnails
+ */
 public class GridViewAdapter extends BaseAdapter {
 
     private static final int PADDING = 0;
     private static int WIDTH;
     private static int HEIGHT;
 
-    private List<Integer> mThumbIDs;
+    private List<String> mThumbIDs;
     private Context mContext;
     private Resources mResources;
     private Bitmap mPlaceHolderBitmap = BitmapFactory.decodeResource(mResources, R.drawable.ic_launcher);
 
-    public GridViewAdapter(Context context, List<Integer> mImageArray) {
+    public GridViewAdapter(Context context, List<String> mImageArray) {
         mContext = context;
         mResources = mContext.getResources();
         this.mThumbIDs = mImageArray;
@@ -83,8 +87,8 @@ public class GridViewAdapter extends BaseAdapter {
         return cardView;
     }
 
-    private void loadBitmap(ImageView imageView, Integer resID) {
-        final String imageKey = String.valueOf(resID);
+    private void loadBitmap(ImageView imageView, String resID) {
+        final String imageKey = resID;
 
         final Bitmap cacheBitmap = MainActivity.getBitmapFromMemCache(imageKey);
 
@@ -92,7 +96,7 @@ public class GridViewAdapter extends BaseAdapter {
             imageView.setImageBitmap(cacheBitmap);
         } else {
             if (cancelPotentialWork(imageView, resID)) {
-                final AsyncLoadImage task = new AsyncLoadImage(imageView, mResources, WIDTH, HEIGHT);
+                final AsyncLoadImage task = new AsyncLoadImage(imageView, WIDTH, HEIGHT);
                 final AsyncDrawable asyncDrawable = new AsyncDrawable(mResources, mPlaceHolderBitmap, task);
                 imageView.setImageDrawable(asyncDrawable);
                 task.execute(resID);
@@ -100,12 +104,12 @@ public class GridViewAdapter extends BaseAdapter {
         }
     }
 
-    private boolean cancelPotentialWork(ImageView imageView, Integer resID) {
+    private boolean cancelPotentialWork(ImageView imageView, String resID) {
         final AsyncLoadImage task = getAsyncLoadImageTask(imageView);
 
         if (task != null) {
-            final int loadingResID = task.mResID;
-            if (loadingResID != resID || loadingResID == 0)
+            final String loadingResID = task.mResID;
+            if (!loadingResID.equals(resID) || loadingResID.equals("-1"))
                 task.cancel(true);
             else
                 return false;

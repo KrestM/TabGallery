@@ -16,24 +16,28 @@ import com.astuetz.PagerSlidingTabStrip;
 
 public class MainActivity extends ActionBarActivity {
 
-    private static LruCache<String, Bitmap> mMemoryCache;
+    private static LruCache<String, Bitmap> mMemoryCache; // Cache for thumbnails of images
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Adding toolbar instead of standard action bar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         if (toolbar != null) {
             setSupportActionBar(toolbar);
         }
 
+        // Calculating cache size
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 6;
 
+        // Creating of fragment responsible for saving cache at recreating activity
         RetainFragment retainFragment = RetainFragment.findOrCreateRetainFragment(getFragmentManager());
         mMemoryCache = retainFragment.mRetainedCache;
 
+        // Check first time of creating cache
         if (mMemoryCache == null) {
             mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
                 @Override
@@ -49,7 +53,6 @@ public class MainActivity extends ActionBarActivity {
 
         PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
         tabs.setViewPager(viewPager);
-
     }
 
 
@@ -75,16 +78,19 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    // Adding image to cache
     public static void addToCacheMemory(String key, Bitmap value) {
         if (getBitmapFromMemCache(key) == null) {
             mMemoryCache.put(key, value);
         }
     }
 
+    // Getting image from cache
     public static Bitmap getBitmapFromMemCache(String key) {
         return mMemoryCache.get(key);
     }
 
+    // Fragment for retaining cache with thumbnails of images
     public static class RetainFragment extends Fragment {
         private static final String TAG = "RetainFragment";
         public LruCache<String, Bitmap> mRetainedCache;

@@ -1,6 +1,5 @@
 package com.mike.krest.mygallery;
 
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -11,17 +10,19 @@ import java.lang.ref.WeakReference;
 /**
  * Created by Mikhail Krestiyaninov on 16.11.14.
  */
-public class AsyncLoadImage extends AsyncTask<Integer, Void, Bitmap> {
+
+/**
+ * Class responding for async process of loading pictures
+ */
+public class AsyncLoadImage extends AsyncTask<String, Void, Bitmap> {
     private final WeakReference<ImageView> mImageViewWeakReference;
-    public int mResID = 0;
+    public String mResID = "-1"; // id of image in the form of path
     private final int WIDTH;
     private final int HEIGHT;
-    private final Resources mResources;
 
-    AsyncLoadImage(ImageView imageView, Resources resources, int width, int height) {
+    AsyncLoadImage(ImageView imageView, int width, int height) {
         WIDTH = width;
         HEIGHT = height;
-        this.mResources = resources;
         this.mImageViewWeakReference = new WeakReference<ImageView>(imageView);
     }
 
@@ -41,17 +42,18 @@ public class AsyncLoadImage extends AsyncTask<Integer, Void, Bitmap> {
     }
 
     @Override
-    protected Bitmap doInBackground(Integer... params) {
+    protected Bitmap doInBackground(String... params) {
         mResID = params[0];
-        final Bitmap bitmap = decodeImageForGridView(mResID, WIDTH, HEIGHT, mResources);
-        MainActivity.addToCacheMemory(String.valueOf(mResID), bitmap);
+        final Bitmap bitmap = decodeImageForGridView(mResID, WIDTH, HEIGHT);
+        MainActivity.addToCacheMemory(mResID, bitmap);
         return bitmap;
     }
 
-    private static Bitmap decodeImageForGridView(int imageID, int reqWidth, int reqHeight, Resources resources) {
+    //Method decoding original images to thumbnails
+    private static Bitmap decodeImageForGridView(String imageID, int reqWidth, int reqHeight) {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeResource(resources, imageID, options);
+        BitmapFactory.decodeFile(imageID, options);
         options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
 
         options.inDither = false;
@@ -59,9 +61,10 @@ public class AsyncLoadImage extends AsyncTask<Integer, Void, Bitmap> {
         options.inPurgeable = true;
         options.inJustDecodeBounds = false;
 
-        return BitmapFactory.decodeResource(resources, imageID, options);
+        return BitmapFactory.decodeFile(imageID, options);
     }
 
+    // Method calculating dimensions for thumbnails and returning the ratio with original dimensions
     private static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
         final int outWidth = options.outWidth;
         final int outHeight = options.outHeight;

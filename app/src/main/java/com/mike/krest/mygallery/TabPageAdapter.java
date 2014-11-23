@@ -1,32 +1,31 @@
 package com.mike.krest.mygallery;
 
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Mikhail Krestiyaninov on 19.11.14.
  */
+
+/**
+ * Adapter for process data to swiping between tabs.
+ */
 public class TabPageAdapter extends FragmentPagerAdapter {
 
-    private ArrayList<Integer> mImageArray = new ArrayList<Integer>(
-            Arrays.asList(R.drawable.image1, R.drawable.image2, R.drawable.image3,
-                    R.drawable.image4, R.drawable.image5, R.drawable.image6,
-                    R.drawable.image7, R.drawable.image8, R.drawable.image9, R.drawable.image10));
+    private ArrayList<ArrayList<String>> mAlbumsWithFiles = new ArrayList<ArrayList<String>>(5); // Array of arrays files within every album
 
-    private ArrayList<Integer> mImageArrayOfDogs = new ArrayList<Integer>(
-            Arrays.asList(R.drawable.sample_1, R.drawable.sample_2, R.drawable.sample_3,
-                    R.drawable.sample_4, R.drawable.sample_5, R.drawable.sample_6,
-                    R.drawable.sample_7));
-
-    private final String[] TITLES = { "Album One", "Album Two" };
+    private final String[] TITLES;
     
     public TabPageAdapter(FragmentManager fm) {
         super(fm);
+        TITLES = getAlbums(Environment.getExternalStorageDirectory(), Environment.DIRECTORY_DCIM, Environment.DIRECTORY_PICTURES);
     }
 
     @Override
@@ -38,16 +37,8 @@ public class TabPageAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int i) {
         Fragment albumFragment = new AlbumHolderFragment();
         Bundle args = new Bundle();
-        switch (i) {
-            case 0:
-                args.putIntegerArrayList(AlbumHolderFragment.ALBUM_NAME, mImageArray);
-                break;
-            case 2:
-                args.putIntegerArrayList(AlbumHolderFragment.ALBUM_NAME, mImageArrayOfDogs);
-                break;
-            default:
-                args.putIntegerArrayList(AlbumHolderFragment.ALBUM_NAME, mImageArrayOfDogs);
-        }
+
+        args.putStringArrayList(AlbumHolderFragment.ALBUM_NAME, mAlbumsWithFiles.get(i));
         albumFragment.setArguments(args);
 
         return albumFragment;
@@ -56,5 +47,53 @@ public class TabPageAdapter extends FragmentPagerAdapter {
     @Override
     public int getCount() {
         return TITLES.length;
+    }
+
+    // Method for receiving names of folders with images and itself images
+    // TODO: add search of images in root directories and checking files with filters and them existing
+    private String[] getAlbums(File rootDirectory, String... directoriesForImages){
+        File checkedDirectory; // Object File for checking is it directory or isn't't
+        String tmpDirectoryPath; // String representation of path for checking directory
+        List<String> pathToAlbumsList = new ArrayList<String>(5); // ArrayList for album paths which will be transformed into titles of tabs
+        File[] listFiles; // List of files
+
+        for (String directoryForImages: directoriesForImages) {
+            checkedDirectory = new File(rootDirectory, directoryForImages);
+
+            // Check root directory
+            if (checkedDirectory.isDirectory()) {
+                // Give absolute path of the root and directories in the root directory for album names
+                String pathToImages = checkedDirectory.getAbsolutePath();
+                String[] directories = checkedDirectory.list();
+
+                // Work flow with extracting name of files in albums and also adding ones in array as titles of directories, too.
+                for (String directory : directories) {
+                    tmpDirectoryPath = pathToImages + File.separator + directory;
+                    checkedDirectory = new File(tmpDirectoryPath);
+
+                    if (checkedDirectory.isDirectory()) {
+
+                        listFiles = checkedDirectory.listFiles();
+                        ArrayList<String> files = new ArrayList<String>();
+
+                        for (File file : listFiles) {
+                            files.add(file.getAbsolutePath());
+                        }
+
+                        if (!files.isEmpty()) {
+                            pathToAlbumsList.add(directory);
+                            mAlbumsWithFiles.add(files);
+                        }
+                    }
+                }
+            }
+        }
+        if (pathToAlbumsList.isEmpty()) {
+            for (int j = 0; j < 4; j++) {
+                mAlbumsWithFiles.add(new ArrayList<String>());
+            }
+            return new String[] {"You", "don't", "have", "albums"};
+        }
+        return pathToAlbumsList.toArray(new String[pathToAlbumsList.size()]);
     }
 }
