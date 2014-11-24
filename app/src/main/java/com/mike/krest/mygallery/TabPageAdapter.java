@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,6 +57,7 @@ public class TabPageAdapter extends FragmentPagerAdapter {
         String tmpDirectoryPath; // String representation of path for checking directory
         List<String> pathToAlbumsList = new ArrayList<String>(5); // ArrayList for album paths which will be transformed into titles of tabs
         File[] listFiles; // List of files
+        ImageFilter imageFilter = new ImageFilter();
 
         for (String directoryForImages: directoriesForImages) {
             checkedDirectory = new File(rootDirectory, directoryForImages);
@@ -73,7 +75,7 @@ public class TabPageAdapter extends FragmentPagerAdapter {
 
                     if (checkedDirectory.isDirectory()) {
 
-                        listFiles = checkedDirectory.listFiles();
+                        listFiles = checkedDirectory.listFiles(imageFilter);
                         ArrayList<String> files = new ArrayList<String>();
 
                         for (File file : listFiles) {
@@ -95,5 +97,19 @@ public class TabPageAdapter extends FragmentPagerAdapter {
             return new String[] {"You", "don't", "have", "albums"};
         }
         return pathToAlbumsList.toArray(new String[pathToAlbumsList.size()]);
+    }
+
+    class ImageFilter implements FileFilter {
+        String[] extensions = {".jpg", ".png", ".jpeg", ".gif"};
+
+        @Override
+        public boolean accept(File pathname) {
+            for (String extension: extensions){
+                if (pathname.getName().toLowerCase().endsWith(extension)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

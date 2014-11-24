@@ -57,8 +57,7 @@ public class AsyncLoadImage extends AsyncTask<String, Void, Bitmap> {
         options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
 
         options.inDither = false;
-        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        options.inPurgeable = true;
+        options.inPreferredConfig = Bitmap.Config.RGB_565;
         options.inJustDecodeBounds = false;
 
         return BitmapFactory.decodeFile(imageID, options);
