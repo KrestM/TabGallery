@@ -37,8 +37,8 @@ public class TabPageAdapter extends FragmentPagerAdapter {
     @Override
     public Fragment getItem(int i) {
         Fragment albumFragment = new AlbumHolderFragment();
-        Bundle args = new Bundle();
 
+        Bundle args = new Bundle();
         args.putStringArrayList(AlbumHolderFragment.ALBUM_NAME, mAlbumsWithFiles.get(i));
         albumFragment.setArguments(args);
 
