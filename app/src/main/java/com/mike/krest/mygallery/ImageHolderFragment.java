@@ -1,6 +1,5 @@
 package com.mike.krest.mygallery;
 
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -24,10 +23,7 @@ public class ImageHolderFragment extends Fragment {
 
         ImageView imageView = (ImageView) inflater.inflate(R.layout.album_image, container, false);
 
-
-        // TODO: make async loading of images through bitmaps
-        Uri image = Uri.parse(mResID);
-        imageView.setImageURI(image);
+        ((ImageViewActivity) getActivity()).loadBitmap(imageView, mResID);
 
         return imageView;
     }

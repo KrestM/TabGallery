@@ -1,11 +1,17 @@
 package com.mike.krest.mygallery;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.LruCache;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 
 import java.util.ArrayList;
 
@@ -17,6 +23,7 @@ public class ImageViewActivity extends ActionBarActivity {
     private ArrayList<String> mImageIDs;
     private String mCurrentImageID;
     private int mPosition;
+    private static LruCache<String, Bitmap> mCacheForSingleAlbum;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +35,25 @@ public class ImageViewActivity extends ActionBarActivity {
         if (toolbar != null) {
             setSupportActionBar(toolbar);
         }
+
+        final int maxMemory = (int) (Runtime.getRuntime().maxMemory()) / 1024;
+        final int cacheSize = maxMemory / 5;
+
+        // Creating of fragment responsible for saving cache at recreating activity
+        RetainFragment retainFragment = RetainFragment.findOrCreateRetainFragment(getSupportFragmentManager());
+        mCacheForSingleAlbum = retainFragment.mRetainedCache;
+
+        // Check first time of creating cache
+        if (mCacheForSingleAlbum == null) {
+            mCacheForSingleAlbum = new LruCache<String, Bitmap>(cacheSize) {
+                @Override
+                protected int sizeOf(String key, Bitmap value) {
+                    return value.getByteCount() / 1024;
+                }
+            };
+            retainFragment.mRetainedCache = mCacheForSingleAlbum;
+        }
+
 
         Bundle args = getIntent().getExtras();
 
@@ -42,9 +68,6 @@ public class ImageViewActivity extends ActionBarActivity {
 
         albumViewPager.setCurrentItem(mPosition); // TODO: check is it work properly everytime or not
     }
-
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -66,5 +89,86 @@ public class ImageViewActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    public void loadBitmap(ImageView imageView, String resID) {
+
+        final String imageKey = resID;
+
+        final Bitmap cacheBitmap = ImageViewActivity.getBitmapFromMemCache(imageKey);
+
+        if (cacheBitmap != null) {
+            imageView.setImageBitmap(cacheBitmap);
+        } else {
+            if (cancelPotentialWork(imageView, resID)) {
+                final AsyncAlbumImageLoad task = new AsyncAlbumImageLoad(imageView, getResources().getDisplayMetrics().widthPixels,
+                        getResources().getDisplayMetrics().heightPixels);
+                final AsyncDrawable asyncDrawable = new AsyncDrawable(getResources(), null, task);
+                imageView.setImageDrawable(asyncDrawable);
+                task.execute(resID);
+            }
+        }
+    }
+
+    private boolean cancelPotentialWork(ImageView imageView, String resID) {
+        final AsyncAlbumImageLoad task = getAsyncLoadImageTask(imageView);
+
+        if (task != null) {
+            final String loadingResID = task.mResID;
+            if (!loadingResID.equals(resID) || loadingResID.equals("-1"))
+                task.cancel(true);
+            else
+                return false;
+        }
+        return true;
+    }
+
+    static AsyncAlbumImageLoad getAsyncLoadImageTask(ImageView imageView) {
+        if (imageView != null) {
+            final Drawable drawable = imageView.getDrawable();
+            if (drawable instanceof AsyncDrawable) {
+                final AsyncDrawable asyncDrawable = (AsyncDrawable) drawable;
+                return asyncDrawable.getAsyncAlbumImageLoad();
+            }
+        }
+        return null;
+    }
+
+
+    // Adding image to cache
+    public static void addToCacheMemory(String key, Bitmap value) {
+        if (getBitmapFromMemCache(key) == null) {
+            mCacheForSingleAlbum.put(key, value);
+        }
+    }
+
+    // Getting image from cache
+    public static Bitmap getBitmapFromMemCache(String key) {
+        return mCacheForSingleAlbum.get(key);
+    }
+
+    // Fragment for retaining cache with thumbnails of images
+    public static class RetainFragment extends Fragment {
+        private static final String TAG = "com.krest.mike.mygallery.imageviewactivity.retainfragment";
+        public LruCache<String, Bitmap> mRetainedCache;
+
+
+        public RetainFragment() {}
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setRetainInstance(true);
+        }
+
+        public static RetainFragment findOrCreateRetainFragment(FragmentManager fragmentManager) {
+            RetainFragment retainFragment = (RetainFragment) fragmentManager.findFragmentByTag(TAG);
+            if (retainFragment == null) {
+                retainFragment = new RetainFragment();
+                fragmentManager.beginTransaction().add(retainFragment, TAG).commit();
+            }
+            return retainFragment;
+        }
     }
 }
