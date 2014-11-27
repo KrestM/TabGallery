@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Adapter for process data to swiping between tabs.
  */
-public class TabPageAdapter extends FragmentPagerAdapter {
+public class TabPageAdapter extends FragmentStatePagerAdapter {
 
     private ArrayList<ArrayList<String>> mAlbumsWithFiles = new ArrayList<ArrayList<String>>(5); // Array of arrays files within every album
 
@@ -50,7 +50,7 @@ public class TabPageAdapter extends FragmentPagerAdapter {
         return TITLES.length;
     }
 
-    // Method for receiving names of folders with images and itself images
+   // Method for receiving names of folders with images and itself images
     // TODO: add search of images in root directories and checking files with filters and them existing
     private String[] getAlbums(File rootDirectory, String... directoriesForImages){
         File checkedDirectory; // Object File for checking is it directory or isn't't

@@ -48,7 +48,7 @@ public class MainActivity extends ActionBarActivity {
             retainFragment.mRetainedCache = mMemoryCache;
         }
 
-        ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
+        final ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
         viewPager.setAdapter(new TabPageAdapter(getSupportFragmentManager()));
 
         PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
@@ -111,6 +111,6 @@ public class MainActivity extends ActionBarActivity {
             super.onCreate(savedInstanceState);
             setRetainInstance(true);
         }
-
     }
+
 }

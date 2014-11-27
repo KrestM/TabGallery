@@ -1,18 +1,20 @@
 package com.mike.krest.mygallery;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.LruCache;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -24,17 +26,13 @@ public class ImageViewActivity extends ActionBarActivity {
     private String mCurrentImageID;
     private int mPosition;
     private static LruCache<String, Bitmap> mCacheForSingleAlbum;
+    private AlbumAdapter albumAdapter;
+    private ViewPager albumViewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_view);
-
-        // Adding toolbar instead of standard action bar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        if (toolbar != null) {
-            setSupportActionBar(toolbar);
-        }
 
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory()) / 1024;
         final int cacheSize = maxMemory / 5;
@@ -54,19 +52,18 @@ public class ImageViewActivity extends ActionBarActivity {
             retainFragment.mRetainedCache = mCacheForSingleAlbum;
         }
 
-
         Bundle args = getIntent().getExtras();
 
         mImageIDs = args.getStringArrayList(AlbumHolderFragment.ALBUM_NAME);
         mCurrentImageID = args.getString(AlbumHolderFragment.EXTRA_RES_ID);
         mPosition = args.getInt(AlbumHolderFragment.EXTRA_POSITION);
 
-        ViewPager albumViewPager = (ViewPager) findViewById(R.id.album_view_pager);
+        albumViewPager = (ViewPager) findViewById(R.id.album_view_pager);
 
-        AlbumAdapter albumAdapter = new AlbumAdapter(getSupportFragmentManager(), mImageIDs, mCurrentImageID);
+        albumAdapter = new AlbumAdapter(getSupportFragmentManager(), mImageIDs, mCurrentImageID);
         albumViewPager.setAdapter(albumAdapter);
 
-        albumViewPager.setCurrentItem(mPosition); // TODO: check is it work properly everytime or not
+        albumViewPager.setCurrentItem(mPosition);
     }
 
     @Override
@@ -84,11 +81,26 @@ public class ImageViewActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_share) {
+            shareCurrentImage(albumViewPager.getCurrentItem());
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void shareCurrentImage(int currentItem) {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("image/*");
+
+        File file = new File(mImageIDs.get(currentItem));
+        if (file.exists()) {
+
+            Uri uriOfFile = Uri.fromFile(file);
+            shareIntent.putExtra(Intent.EXTRA_STREAM, uriOfFile);
+
+            startActivity(Intent.createChooser(shareIntent, "What app you prefer?"));
+        }
     }
 
 
